@@ -1,0 +1,38 @@
+# Example: copy to .github/workflows/ in your repo. Needs the repository secret APIFY_TOKEN.
+# Runs bill to your own Apify account under the Actor's pay-per-event pricing: https://apify.com/cce_partners/sec-form-d-new-raises-feed
+name: "New tech raises in CA and NY (SEC Form D, daily)"
+on:
+  schedule:
+    - cron: '30 12 * * 1-5'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: tech-ca-ny
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - id: feed
+        uses: chrisgrant303/gh-action-govcon-feeds@v1
+        with:
+          apify-token: ${{ secrets.APIFY_TOKEN }}
+          actor: formd
+          monitor-name: tech-ca-ny
+          input-json: >-
+            {"states":["CA","NY"],"industryGroups":["Other Technology"],"excludeFunds":true,"minOfferingAmount":1000000}
+          max-items: '200'
+          timeout-secs: '900'
+          output-format: both
+          open-issue: 'true'
+          github-token: ${{ github.token }}
+          # issue-labels: form-d   # labels must already exist in your repo
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.feed.outputs.item-count != '' && steps.feed.outputs.item-count != '0'
+        with:
+          name: formd-${{ steps.feed.outputs.run-id }}
+          path: apify-output/
+          retention-days: 30

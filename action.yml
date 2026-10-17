@@ -1,0 +1,103 @@
+name: 'CCE GovCon Feeds (Apify)'
+description: 'Run CCE Partners GovCon Apify Actors (SAM.gov, recompetes, Form D, awards) and get CSV/JSON, a summary and issues.'
+author: 'CCE Partners LLC'
+branding:
+  icon: 'radio'
+  color: 'blue'
+inputs:
+  apify-token:
+    description: 'Your Apify API token. Store it as a repository secret and pass ${{ secrets.APIFY_TOKEN }}. Runs bill to this account.'
+    required: true
+  actor:
+    description: 'sam | recompete | formd | awards, or a full Actor id (user/name or the 17-character id).'
+    required: true
+  input-json:
+    description: 'Actor input as a JSON object string, e.g. {"naicsCodes":["541512"]}. See each Actor''s input schema.'
+    required: false
+    default: '{}'
+  monitor-name:
+    description: 'Monitor name for new-only delivery; merged into the input (monitorName, or stateKey for formd). Without one the run is stateless.'
+    required: false
+    default: ''
+  build:
+    description: 'Actor build tag or number.'
+    required: false
+    default: 'latest'
+  memory-mbytes:
+    description: 'Run memory in MB (power of 2). Empty = the Actor default (SAM 1024 MB, the others 512 MB). The start fee is per GB.'
+    required: false
+    default: ''
+  timeout-secs:
+    description: 'Run timeout on Apify in seconds. Empty = the Actor default.'
+    required: false
+    default: ''
+  max-items:
+    description: 'Maximum rows (cost cap). Merged into the input (maxItems, or maxFilings for formd) and sent as the run maxItems option.'
+    required: false
+    default: ''
+  max-total-charge-usd:
+    description: 'Optional hard spend cap for the run in USD (the Apify maxTotalChargeUsd run option). Empty = Apify default.'
+    required: false
+    default: ''
+  wait-timeout-secs:
+    description: 'How long the action waits for the run to finish. Default: timeout-secs + 300, or 3600.'
+    required: false
+    default: ''
+  abort-on-timeout:
+    description: 'Gracefully abort the run if wait-timeout-secs is reached or if polling the run keeps failing.'
+    required: false
+    default: 'true'
+  output-format:
+    description: 'csv | json | both'
+    required: false
+    default: 'csv'
+  output-path:
+    description: 'Directory for the output files.'
+    required: false
+    default: 'apify-output'
+  summary-rows:
+    description: 'Rows shown in the job summary table (0 = none).'
+    required: false
+    default: '10'
+  open-issue:
+    description: 'Create one GitHub issue per run listing the rows (skipped when there are 0 rows). Opt-in.'
+    required: false
+    default: 'false'
+  github-token:
+    description: 'Token used only when open-issue is true, e.g. ${{ github.token }} with permissions issues: write.'
+    required: false
+    default: ''
+  issue-number:
+    description: 'If set, append the rows as a comment on this issue instead of creating a new one.'
+    required: false
+    default: ''
+  issue-labels:
+    description: 'Comma-separated labels for new issues.'
+    required: false
+    default: ''
+  issue-rows:
+    description: 'Maximum rows listed in the issue body.'
+    required: false
+    default: '50'
+outputs:
+  run-id:
+    description: 'Apify run id.'
+  run-status:
+    description: 'Final run status (SUCCEEDED, FAILED, ABORTED, TIMED-OUT, ...).'
+  run-url:
+    description: 'Link to the run in Apify Console.'
+  dataset-id:
+    description: 'Default dataset id of the run.'
+  item-count:
+    description: 'Number of rows in the dataset.'
+  csv-path:
+    description: 'Path of the CSV file (if written).'
+  json-path:
+    description: 'Path of the JSON file (if written).'
+  usage-usd:
+    description: 'Run cost in USD as reported by Apify for your account (if available).'
+  issue-url:
+    description: 'URL of the created issue or comment (if any).'
+runs:
+  using: 'node24'
+  main: 'src/index.js'
